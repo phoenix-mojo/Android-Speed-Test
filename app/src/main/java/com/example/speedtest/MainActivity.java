@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textView = findViewById(R.id.textView);
-        textView2 = findViewById(R.id.textView2);
         speedoMeterView = findViewById(R.id.speedometerview);
         triggerButton = findViewById(R.id.button);
 
@@ -43,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     public class SpeedTestTask extends AsyncTask<Void, Void, String> {
 
         public Boolean testRunning = false;
+        public int fileUploadSizeMb = 50; // Upload file size in Megabits (Mb)
         public int numberOfIterations = 3;  // Number of tests
         public int intervalTests = 10;  // Interval between tests in seconds
 
@@ -152,13 +152,14 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                // speedTestSocket.startUpload("https://testmy.net", 100000000);
-                speedTestSocket.startDownload("https://ipv4.bouygues.testdebit.info/50M/50M.iso");
+                speedTestSocket.startUpload("https://testmy.net", fileUploadSizeMb * 1000000);
+                // speedTestSocket.startDownload("https://ipv4.bouygues.testdebit.info/50M/50M.iso");
 
                 testRunning = true;
 
                 while(testRunning);
 
+                speedTestSocket = null;
                 System.out.println("======================Finishing iteration: " + i + " ======================");
 
                 if (i < numberOfIterations) {
