@@ -4,13 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Button;
 import android.graphics.Color;
-
-import com.jignesh13.speedometer.SpeedoMeterView;
 
 import fr.bmartel.speedtest.SpeedTestReport;
 import fr.bmartel.speedtest.SpeedTestSocket;
@@ -24,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
     SpeedoMeterView speedoMeterView;
     TextView textView;
+    TextView textView2;
     Button triggerButton;
 
     @Override
@@ -31,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textView = findViewById(R.id.textView);
+        textView2 = findViewById(R.id.textView2);
         speedoMeterView = findViewById(R.id.speedometerview);
         triggerButton = findViewById(R.id.button);
 
@@ -43,92 +42,130 @@ public class MainActivity extends AppCompatActivity {
 
     public class SpeedTestTask extends AsyncTask<Void, Void, String> {
 
+        public Boolean testRunning = false;
+        public int numberOfIterations = 3;  // Number of tests
+        public int intervalTests = 10;  // Interval between tests in seconds
+
+        String formatSpeedTestMode(SpeedTestMode mode) {
+            String result = mode.toString();
+            result = result.substring(0, 1).toUpperCase() + result.substring(1).toLowerCase();
+
+            return result;
+        }
+
+        void waitForSeconds(int seconds) {
+            int j = seconds + 1;
+            while(j-- > 1)
+            {
+                System.out.println("Starting in seconds: " + j);
+                try
+                {
+                    Thread.sleep( 1000 );
+                }
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         @Override
         protected String doInBackground(Void... params) {
 
-            SpeedTestSocket speedTestSocket = new SpeedTestSocket();
+            for (int i = 1; i <= numberOfIterations; i++) {
 
-            // add a listener to wait for speedtest completion and progress
-            speedTestSocket.addSpeedTestListener(new ISpeedTestListener() {
+                System.out.println("====================== Starting iteration: " + i+ " ======================");
+                SpeedTestSocket speedTestSocket = new SpeedTestSocket();
 
-                String formatSpeedTestMode(SpeedTestMode mode) {
-                    String result = mode.toString();
-                    result = result.substring(0,1).toUpperCase() + result.substring(1).toLowerCase();
+                // add a listener to wait for speedtest completion and progress
+                speedTestSocket.addSpeedTestListener(new ISpeedTestListener() {
 
-                    return result;
+                    @Override
+                    public void onCompletion(SpeedTestReport report) {
+
+                        final int deger = (int) report.getTransferRateBit().intValue() / 1000000;
+                        final int processedFileSize = (int) report.getTemporaryPacketSize() / 1000000;
+                        final int totalFileSize = (int) report.getTotalPacketSize() / 1000000;
+                        final int elapsedTimeSec = (int) ((report.getReportTime() - report.getStartTime()) / 1000000000);
+                        final String testMode = formatSpeedTestMode(report.getSpeedTestMode());
+                        final int progressPercent = (int) report.getProgressPercent();
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                speedoMeterView.setSpeed(0, true);//speed set 0 to 140
+                                speedoMeterView.setNeedlecolor(Color.GREEN);
+                                textView.setText("TestMode: " + testMode + "Progress: " + (int) progressPercent + "%" + ", SpeedMbps: " + deger + ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
+                                triggerButton.setText("Test completed");
+                                triggerButton.setTextColor(Color.BLUE);
+                                triggerButton.setBackgroundColor(Color.GREEN);
+                                triggerButton.setEnabled(true);
+                            }
+                        });
+
+                        testRunning = false;
+                    }
+
+                    @Override
+                    public void onError(SpeedTestError speedTestError, String errorMessage) {
+                        System.out.println("onError called: " + errorMessage + "speedTestError: " + speedTestError);
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                speedoMeterView.setNeedlecolor(Color.RED);
+                                triggerButton.setText("Test failed");
+                                triggerButton.setBackgroundColor(Color.RED);
+                                triggerButton.setEnabled(true);
+                            }
+                        });
+
+                        testRunning = false;
+                    }
+
+                    @Override
+                    public void onProgress(float percent, SpeedTestReport report) {
+
+                        final int deger = (int) report.getTransferRateBit().intValue() / 1000000;
+                        final int processedFileSize = (int) report.getTemporaryPacketSize() / 1000000;
+                        final int totalFileSize = (int) report.getTotalPacketSize() / 1000000;
+                        final int elapsedTimeSec = (int) ((report.getReportTime() - report.getStartTime()) / 1000000000);
+                        final String testMode = formatSpeedTestMode(report.getSpeedTestMode());
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                speedoMeterView.setSpeed(deger, true);
+                                textView.setText("TestMode: " + testMode + ", Progress: " + (int) percent + "%" + ", SpeedMbps: " + deger + ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
+                                speedoMeterView.setNeedlecolor(Color.YELLOW);
+                                triggerButton.setText("Test in progress");
+                                triggerButton.setBackgroundColor(Color.LTGRAY);
+                                triggerButton.setTextColor(Color.DKGRAY);
+                                triggerButton.setEnabled(false);
+                            }
+                        });
+
+                        testRunning = true;
+                    }
+                });
+
+                // speedTestSocket.startUpload("https://testmy.net", 100000000);
+                speedTestSocket.startDownload("https://ipv4.bouygues.testdebit.info/50M/50M.iso");
+
+                testRunning = true;
+
+                while(testRunning);
+
+                System.out.println("======================Finishing iteration: " + i + " ======================");
+
+                if (i < numberOfIterations) {
+                    System.out.println("Sleeping for 10 seconds before triggering the next iteration");
+                    waitForSeconds(intervalTests);
                 }
-
-                @Override
-                public void onCompletion(SpeedTestReport report) {
-
-                    final int deger = (int) report.getTransferRateBit().intValue()/1000000;
-                    final int processedFileSize = (int) report.getTemporaryPacketSize()/1000000;
-                    final int totalFileSize = (int) report.getTotalPacketSize()/1000000;
-                    final int elapsedTimeSec = (int) ((report.getReportTime() - report.getStartTime()) / 1000000000);
-                    final String testMode = formatSpeedTestMode(report.getSpeedTestMode());
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            // speedoMeterView.setSpeed(deger, true);
-                            speedoMeterView.setSpeed(0,true);//speed set 0 to 140
-                            speedoMeterView.setNeedlecolor(Color.GREEN);
-                            textView.setText("TestMode: " + testMode + ", Progress: 100%" + ", SpeedMbps: " + deger+  ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
-                            triggerButton.setText("Test completed");
-                            triggerButton.setTextColor(Color.BLUE);
-                            triggerButton.setBackgroundColor(Color.GREEN);
-                            triggerButton.setEnabled(true);
-                        }
-                    });
-                    // called when download/upload is finished
-                    Log.v("speedtest", "[COMPLETED] rate in octet/s : " + report.getTransferRateOctet());
-                    Log.v("speedtest", "[COMPLETED] rate in bit/s   : " + report.getTransferRateBit());
-                }
-
-                @Override
-                public void onError(SpeedTestError speedTestError, String errorMessage) {
-                    System.out.println("onError called: " + errorMessage + "speedTestError: " + speedTestError);
-                    speedoMeterView.setNeedlecolor(Color.RED);
-                    triggerButton.setText("Test failed");
-                    triggerButton.setBackgroundColor(Color.RED);
-                    triggerButton.setEnabled(true);
-                    // called when a download/upload error occur
-                }
-
-                @Override
-                public void onProgress(float percent, SpeedTestReport report) {
-
-                    final int deger = (int) report.getTransferRateBit().intValue()/1000000;
-                    final int processedFileSize = (int) report.getTemporaryPacketSize()/1000000;
-                    final int totalFileSize = (int) report.getTotalPacketSize()/1000000;
-                    final int elapsedTimeSec = (int) ((report.getReportTime() - report.getStartTime()) / 1000000000);
-                    final String testMode = formatSpeedTestMode(report.getSpeedTestMode());
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            // speedoMeterView.setSpeed(deger, true);
-                            speedoMeterView.setSpeed(deger,true);
-                            textView.setText("TestMode: " + testMode + ", Progress: " + (int) percent + "%" + ", SpeedMbps: " + deger+  ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
-                            speedoMeterView.setNeedlecolor(Color.YELLOW);
-                            triggerButton.setText("Test in progress");
-                            triggerButton.setBackgroundColor(Color.LTGRAY);
-                            triggerButton.setTextColor(Color.DKGRAY);
-                            triggerButton.setEnabled(false);
-                        }
-                    });
-
-                    // called to notify download/upload progress
-                    Log.v("speedtest", "[PROGRESS] progress : " + percent + "%");
-                    Log.v("speedtest", "[PROGRESS] rate in octet/s : " + report.getTransferRateOctet());
-                    Log.v("speedtest", "[PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
-                }
-            });
-
-            speedTestSocket.startUpload("https://testmy.net", 100000000);
-           // speedTestSocket.startDownload("https://bouygues.testdebit.info/100M.iso");
+            }
 
             return null;
         }
