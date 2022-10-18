@@ -2,9 +2,12 @@ package com.example.speedtest;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Button;
 import android.graphics.Color;
@@ -31,6 +34,16 @@ public class MainActivity extends AppCompatActivity {
         textView = findViewById(R.id.textView);
         speedoMeterView = findViewById(R.id.speedometerview);
         triggerButton = findViewById(R.id.button);
+
+        Spinner dropdown = findViewById(R.id.spinner1);
+        String[] items = new String[]{"1 MB", "25 MB", "100 MB", "1 GB", "10 GB"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+        dropdown.setAdapter(adapter);
+
+        Spinner dropdown1 = findViewById(R.id.spinner2);
+        String[] items1 = new String[]{"Download", "Upload"};
+        ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items1);
+        dropdown1.setAdapter(adapter1);
 
     }
 
