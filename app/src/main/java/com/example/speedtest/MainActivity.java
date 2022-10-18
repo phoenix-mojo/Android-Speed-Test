@@ -24,26 +24,30 @@ public class MainActivity extends AppCompatActivity {
 
     SpeedoMeterView speedoMeterView;
     TextView textView;
-    TextView textView2;
+    Spinner packetSize;
+    Spinner testMode;
     Button triggerButton;
+    final String[] packetSizes = {"1 MB", "25 MB", "100 MB", "1 GB", "10 GB"};
+    final String[] testModes = {"Download", "Upload"};
+
+    public void SetSpinnerDropdown(Spinner spinner, String[] items) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+        spinner.setAdapter(adapter);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         textView = findViewById(R.id.textView);
         speedoMeterView = findViewById(R.id.speedometerview);
         triggerButton = findViewById(R.id.button);
+        packetSize = findViewById(R.id.spinner1);
+        testMode = findViewById(R.id.spinner2);
 
-        Spinner dropdown = findViewById(R.id.spinner1);
-        String[] items = new String[]{"1 MB", "25 MB", "100 MB", "1 GB", "10 GB"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
-        dropdown.setAdapter(adapter);
-
-        Spinner dropdown1 = findViewById(R.id.spinner2);
-        String[] items1 = new String[]{"Download", "Upload"};
-        ArrayAdapter<String> adapter1 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items1);
-        dropdown1.setAdapter(adapter1);
+        SetSpinnerDropdown(packetSize, packetSizes);
+        SetSpinnerDropdown(testMode, testModes);
 
     }
 
@@ -51,11 +55,32 @@ public class MainActivity extends AppCompatActivity {
         new SpeedTestTask().execute();
     }
 
+    public int getFileUploadSizeMb() {
+        String packetSizeString = packetSize.getSelectedItem().toString();
+        String[] tokens = packetSizeString.split(" ");
+        int size = Integer.parseInt(tokens[0]);
+        int multiplier = 0;
+
+        if (tokens[1].equalsIgnoreCase("MB"))
+        {
+            multiplier = 1;
+        }
+        else if (tokens[1].equalsIgnoreCase("GB"))
+        {
+            multiplier = 1000;
+        }
+        else
+        {
+            throw new java.lang.Error("Packet size can only be in MB or GB");
+        }
+
+        return size * multiplier;
+    }
 
     public class SpeedTestTask extends AsyncTask<Void, Void, String> {
 
         public Boolean testRunning = false;
-        public int fileUploadSizeMb = 50; // Upload file size in Megabits (Mb)
+        public int fileUploadSizeMb = getFileUploadSizeMb(); // Upload file size in Megabits (Mb)
         public int numberOfIterations = 3;  // Number of tests
         public int intervalTests = 10;  // Interval between tests in seconds
 
