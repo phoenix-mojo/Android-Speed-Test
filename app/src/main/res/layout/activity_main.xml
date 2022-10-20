@@ -35,7 +35,7 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="56dp"
+        android:layout_marginBottom="84dp"
         android:paddingLeft="50dp"
         android:text=""
         android:textSize="20dp"
@@ -124,6 +124,18 @@
         tools:ignore="MissingConstraints"
         tools:layout_editor_absoluteX="113dp"
         tools:layout_editor_absoluteY="200dp" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View Summary"
+        android:onClick="TestTriggerButton2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.988" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

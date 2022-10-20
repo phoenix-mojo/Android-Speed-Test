@@ -3,12 +3,18 @@ package com.example.speedtest;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.Button;
 import android.graphics.Color;
 
@@ -27,6 +33,11 @@ public class MainActivity extends AppCompatActivity {
     Spinner packetSize;
     Spinner testMode;
     Button triggerButton;
+    Button triggerButton2;
+
+    EditText numberOfTests;
+    TextView intervalTests;
+
     final String[] packetSizes = {"1 MB", "25 MB", "100 MB", "1 GB", "10 GB"};
     final String[] testModes = {"Download", "Upload"};
 
@@ -45,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
         triggerButton = findViewById(R.id.button);
         packetSize = findViewById(R.id.spinner1);
         testMode = findViewById(R.id.spinner2);
+        numberOfTests = findViewById(R.id.editTextNumber);
+        intervalTests = findViewById(R.id.editTextNumber2);
+        triggerButton2 = findViewById(R.id.button2);
 
         SetSpinnerDropdown(packetSize, packetSizes);
         SetSpinnerDropdown(testMode, testModes);
@@ -54,6 +68,14 @@ public class MainActivity extends AppCompatActivity {
     public void TestTriggerButton(View view) {
         new SpeedTestTask().execute();
     }
+
+    public void TestTriggerButton2(View view){
+        Intent intent = new Intent(this, table.class);
+        startActivity(intent);
+    }
+
+
+
 
     public int getFileUploadSizeMb() {
         String packetSizeString = packetSize.getSelectedItem().toString();
@@ -81,8 +103,8 @@ public class MainActivity extends AppCompatActivity {
 
         public Boolean testRunning = false;
         public int fileUploadSizeMb = getFileUploadSizeMb(); // Upload file size in Megabits (Mb)
-        public int numberOfIterations = 3;  // Number of tests
-        public int intervalTests = 10;  // Interval between tests in seconds
+        public int numberOfIterations = Integer.parseInt(numberOfTests.getText().toString());  // Number of tests
+        public int sleepTimeSec = Integer.parseInt(intervalTests.getText().toString());  // Interval between tests in seconds
 
         String formatSpeedTestMode(SpeedTestMode mode) {
             String result = mode.toString();
@@ -190,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+
                 speedTestSocket.startUpload("https://testmy.net", fileUploadSizeMb * 1000000);
                 // speedTestSocket.startDownload("https://ipv4.bouygues.testdebit.info/50M/50M.iso");
 
@@ -201,8 +224,8 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("======================Finishing iteration: " + i + " ======================");
 
                 if (i < numberOfIterations) {
-                    System.out.println("Sleeping for 10 seconds before triggering the next iteration");
-                    waitForSeconds(intervalTests);
+                    System.out.println("Sleeping for " +  sleepTimeSec + " seconds before triggering the next iteration");
+                    waitForSeconds(sleepTimeSec);
                 }
             }
 
