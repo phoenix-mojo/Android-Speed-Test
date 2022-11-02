@@ -10,6 +10,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -38,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
     EditText numberOfTests;
     TextView intervalTests;
 
-    final String[] packetSizes = {"1 MB", "25 MB", "100 MB", "1 GB", "10 GB"};
-    final String[] testModes = {"Download", "Upload"};
+    final String[] packetSizes = {"1 MB", "25 MB","50 MB", "75 MB", "100 MB"};
+    final String[] testModes = {"Download", "Upload", "Upload & Download"};
 
     public void SetSpinnerDropdown(Spinner spinner, String[] items) {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
@@ -70,11 +71,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void TestTriggerButton2(View view){
+
         Intent intent = new Intent(this, table.class);
         startActivity(intent);
+
     }
-
-
 
 
     public int getFileUploadSizeMb() {
@@ -138,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
                 SpeedTestSocket speedTestSocket = new SpeedTestSocket();
 
                 // add a listener to wait for speedtest completion and progress
+                int finalI = i;
                 speedTestSocket.addSpeedTestListener(new ISpeedTestListener() {
 
                     @Override
@@ -156,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 speedoMeterView.setSpeed(0, true);//speed set 0 to 140
                                 speedoMeterView.setNeedlecolor(Color.GREEN);
-                                textView.setText("TestMode: " + testMode + "Progress: " + (int) progressPercent + "%" + ", SpeedMbps: " + deger + ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
+                                //textView.setText("TestMode: " + testMode + "Progress: " + (int) progressPercent + "%" + ", SpeedMbps: " + deger + ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
                                 triggerButton.setText("Test completed");
                                 triggerButton.setTextColor(Color.BLUE);
                                 triggerButton.setBackgroundColor(Color.GREEN);
@@ -194,12 +196,16 @@ public class MainActivity extends AppCompatActivity {
                         final int elapsedTimeSec = (int) ((report.getReportTime() - report.getStartTime()) / 1000000000);
                         final String testMode = formatSpeedTestMode(report.getSpeedTestMode());
 
+
+
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
 
                                 speedoMeterView.setSpeed(deger, true);
-                                textView.setText("TestMode: " + testMode + ", Progress: " + (int) percent + "%" + ", SpeedMbps: " + deger + ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
+                                //textView.setText("TestMode: " + testMode + ", Progress: " + (int) percent + "%" + ", SpeedMbps: " + deger + ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);
+                                textView.setText(+ finalI +". " + testMode + ": " + deger + " Mbps" +"\nProgress: " + (int) percent + "%" + "\nElapsedTimeSec: " + elapsedTimeSec);
                                 speedoMeterView.setNeedlecolor(Color.YELLOW);
                                 triggerButton.setText("Test in progress");
                                 triggerButton.setBackgroundColor(Color.LTGRAY);
@@ -212,9 +218,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-
+               
                 speedTestSocket.startUpload("https://testmy.net", fileUploadSizeMb * 1000000);
-                // speedTestSocket.startDownload("https://ipv4.bouygues.testdebit.info/50M/50M.iso");
+                //speedTestSocket.startDownload("https://ipv4.bouygues.testdebit.info/50M/50M.iso");
 
                 testRunning = true;
 
@@ -227,6 +233,9 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println("Sleeping for " +  sleepTimeSec + " seconds before triggering the next iteration");
                     waitForSeconds(sleepTimeSec);
                 }
+
+
+
             }
 
             return null;
