@@ -39,8 +39,13 @@ public class MainActivity extends AppCompatActivity {
     EditText numberOfTests;
     TextView intervalTests;
 
-    final String[] packetSizes = {"1 MB", "25 MB","50 MB", "75 MB", "100 MB"};
-    final String[] testModes = {"Download", "Upload", "Upload & Download"};
+    public final String TEST_MODE_UPLOAD = "Upload";
+    public final String TEST_MODE_DOWNLOAD = "Download";
+    public final String TEST_MODE_UPLOAD_DOWNLOAD = "Upload/Download";
+
+
+    final String[] packetSizes = {"1 MB", "5 MB", "10 MB", "50 MB", "100 MB"};
+    final String[] testModes = {TEST_MODE_DOWNLOAD, TEST_MODE_UPLOAD, TEST_MODE_UPLOAD_DOWNLOAD};
 
     public void SetSpinnerDropdown(Spinner spinner, String[] items) {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
@@ -94,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-            throw new java.lang.Error("Packet size can only be in MB or GB");
+            throw new java.lang.Error("Packet size should be in MB or GB");
         }
 
         return size * multiplier;
@@ -106,12 +111,97 @@ public class MainActivity extends AppCompatActivity {
         public int fileUploadSizeMb = getFileUploadSizeMb(); // Upload file size in Megabits (Mb)
         public int numberOfIterations = Integer.parseInt(numberOfTests.getText().toString());  // Number of tests
         public int sleepTimeSec = Integer.parseInt(intervalTests.getText().toString());  // Interval between tests in seconds
+        public String inputTestMode = testMode.getSelectedItem().toString();  // Input test mode
 
         String formatSpeedTestMode(SpeedTestMode mode) {
             String result = mode.toString();
             result = result.substring(0, 1).toUpperCase() + result.substring(1).toLowerCase();
 
             return result;
+        }
+
+        int getInputTestModeEnum()
+        {
+            if (inputTestMode.equalsIgnoreCase(TEST_MODE_UPLOAD))
+            {
+                return 0;
+            }
+            else if (inputTestMode.equalsIgnoreCase(TEST_MODE_DOWNLOAD))
+            {
+                return 1;
+            }
+            else if (inputTestMode.equalsIgnoreCase(TEST_MODE_UPLOAD_DOWNLOAD))
+            {
+                return 2;
+            }
+            else
+            {
+                throw new java.lang.Error("Unrecognized input test mode detected");
+            }
+        }
+
+        void runTestUpload(SpeedTestSocket speedTestSocket)
+        {
+            speedTestSocket.startUpload("https://testmy.net", fileUploadSizeMb * 1000000);
+            testRunning = true;
+            while(testRunning);
+        }
+
+        String getDownloadUrl()
+        {
+            String url = null;
+
+            switch(fileUploadSizeMb)
+            {
+                case 1:
+                    url = "https://bouygues.testdebit.info/100M/100M.iso";
+                    break;
+                case 5:
+                    url = "https://bouygues.testdebit.info/5M/5M.iso";
+                    break;
+                case 10:
+                    url = "https://bouygues.testdebit.info/100M/100M.iso";
+                    break;
+                case 50:
+                    url = "https://bouygues.testdebit.info/100M/100M.iso";
+                    break;
+                case 100:
+                    url = "https://bouygues.testdebit.info/100M/100M.iso";
+                    break;
+                default:
+                    throw new java.lang.Error("Unexpected download packed size detected");
+            }
+
+            return url;
+        }
+
+        void runTestDownload(SpeedTestSocket speedTestSocket)
+        {
+            String downloadUrl = getDownloadUrl();
+            speedTestSocket.startDownload(downloadUrl);
+            testRunning = true;
+            while(testRunning);
+        }
+
+        void runTest(SpeedTestSocket speedTestSocket) {
+            int inputTestModeEnum = getInputTestModeEnum();
+
+            switch(inputTestModeEnum)
+            {
+                case 0:
+                    runTestUpload(speedTestSocket);
+                    break;
+                case 1:
+                    runTestDownload(speedTestSocket);
+                    break;
+                case 2:
+                    runTestUpload(speedTestSocket);
+                    waitForSeconds(sleepTimeSec);
+                    runTestDownload(speedTestSocket);
+                    break;
+                default:
+                    throw new java.lang.Error("Unrecognized input test mode detected");
+            }
         }
 
         void waitForSeconds(int seconds) {
@@ -196,9 +286,6 @@ public class MainActivity extends AppCompatActivity {
                         final int elapsedTimeSec = (int) ((report.getReportTime() - report.getStartTime()) / 1000000000);
                         final String testMode = formatSpeedTestMode(report.getSpeedTestMode());
 
-
-
-
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -218,15 +305,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-               
-                speedTestSocket.startUpload("https://testmy.net", fileUploadSizeMb * 1000000);
-                //speedTestSocket.startDownload("https://ipv4.bouygues.testdebit.info/50M/50M.iso");
-
-                testRunning = true;
-
-                while(testRunning);
+                runTest(speedTestSocket);
 
                 speedTestSocket = null;
+
                 System.out.println("======================Finishing iteration: " + i + " ======================");
 
                 if (i < numberOfIterations) {
