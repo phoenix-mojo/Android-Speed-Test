@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
     EditText numberOfTests;
     TextView intervalTests;
+    TestResults results;
 
     public final String TEST_MODE_UPLOAD = "Upload";
     public final String TEST_MODE_DOWNLOAD = "Download";
@@ -66,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
         intervalTests = findViewById(R.id.editTextNumber2);
         triggerButton2 = findViewById(R.id.button2);
 
+        results = new TestResults();
+
         SetSpinnerDropdown(packetSize, packetSizes);
         SetSpinnerDropdown(testMode, testModes);
 
@@ -77,9 +80,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void TestTriggerButton2(View view){
 
-        Intent intent = new Intent(this, table.class);
+        Intent intent = new Intent(this, TestSummary.class);
         startActivity(intent);
 
+        TestSummary testSummary = new TestSummary();
+        testSummary.Display(results);
     }
 
 
@@ -256,6 +261,12 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
 
+                        TestResult result = new TestResult();
+                        result.iterationNumber = finalI;
+                        result.elapsedTimeSec = elapsedTimeSec;
+                        results.Results.add(result);
+                        results.TotalTimeSec += elapsedTimeSec;
+
                         testRunning = false;
                     }
 
@@ -273,6 +284,10 @@ public class MainActivity extends AppCompatActivity {
                                 triggerButton.setEnabled(true);
                             }
                         });
+
+                        TestResult result = new TestResult();
+                        result.iterationNumber = finalI;
+                        results.Results.add(result);
 
                         testRunning = false;
                     }

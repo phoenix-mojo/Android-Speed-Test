@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TableRow;
 
-public class table extends AppCompatActivity {
+public class TestSummary extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +32,16 @@ public class table extends AppCompatActivity {
                 newString= (String) savedInstanceState.getSerializable("Mode");
             }
 
+        }
+    }
+
+    public void Display(TestResults results)
+    {
+        System.out.println("Size of results: " + results.Results.size() + " TotalTimeSec: " + results.TotalTimeSec);
+
+        for (int i = 0; i < results.Results.size(); i++)
+        {
+            System.out.println("Result " + i + ": " + "iteration number: " + results.Results.get(i).iterationNumber + " elapsedTimeSec: " + results.Results.get(i).elapsedTimeSec);
         }
     }
 }
