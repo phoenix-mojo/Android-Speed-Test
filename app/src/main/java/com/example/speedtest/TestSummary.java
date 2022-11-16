@@ -3,36 +3,66 @@ package com.example.speedtest;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.TextView;
+
+import com.google.android.material.tabs.TabLayout;
 
 public class TestSummary extends AppCompatActivity {
+
+    TableLayout summaryTable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_table);
 
+        summaryTable = (TableLayout) findViewById(R.id.summary);
 
-        for (int i = 0; i < 4; i++) {
+        Intent intent = getIntent();
+        TestResults results = (TestResults) intent.getSerializableExtra("RESULTS");
+        Display(results);
+    }
 
-            TableRow row= new TableRow(this);
-            TableRow.LayoutParams lp = new  TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT);
-            row.setLayoutParams(lp);
+    public TableRow prepareRow(int iteration, String mode, int speed, int timeTaken, String result)
+    {
+        TableRow resultRow = new TableRow(this);
 
-            String newString;
-            if (savedInstanceState == null) {
-                Bundle extras = getIntent().getExtras();
-                if(extras == null) {
-                    newString= null;
-                } else {
-                    newString= extras.getString("Mode");
-                }
-            } else {
-                newString= (String) savedInstanceState.getSerializable("Mode");
-            }
+        TextView iterationView = new TextView(this);
+        iterationView.setText(Integer.toString(iteration));
+        iterationView.setTextColor(Color.WHITE);
+        iterationView.setGravity(Gravity.CENTER);
+        resultRow.addView(iterationView);
 
-        }
+        TextView modeView = new TextView(this);
+        modeView.setText(mode);
+        modeView.setTextColor(Color.WHITE);
+        modeView.setGravity(Gravity.CENTER);
+        resultRow.addView(modeView);
+
+        TextView speedView = new TextView(this);
+        speedView.setText(Integer.toString(speed));
+        speedView.setTextColor(Color.WHITE);
+        speedView.setGravity(Gravity.CENTER);
+        resultRow.addView(speedView);
+
+        TextView timeTakenView = new TextView(this);
+        timeTakenView.setText(Integer.toString(timeTaken));
+        timeTakenView.setTextColor(Color.WHITE);
+        timeTakenView.setGravity(Gravity.CENTER);
+        resultRow.addView(timeTakenView);
+
+        TextView resultView = new TextView(this);
+        resultView.setText(result);
+        resultView.setTextColor(Color.WHITE);
+        resultView.setGravity(Gravity.CENTER);
+        resultRow.addView(resultView);
+
+        return resultRow;
     }
 
     public void Display(TestResults results)
@@ -41,10 +71,14 @@ public class TestSummary extends AppCompatActivity {
 
         for (int i = 0; i < results.Results.size(); i++)
         {
-            System.out.println("Result " + i + ": " + "iteration number: " + results.Results.get(i).iterationNumber + " elapsedTimeSec: " + results.Results.get(i).elapsedTimeSec);
+            int iteration = results.Results.get(i).iterationNumber;
+            String mode = results.Results.get(i).testMode;
+            int speed = results.Results.get(i).speed;
+            int time = results.Results.get(i).elapsedTimeSec;
+            String result = results.Results.get(i).status;
+
+            System.out.println("Iteration: "  + iteration + " Mode: " + mode + " Speed: " + speed + " elapsedTimeSec: " + time + " Result: " + result);
+            summaryTable.addView(prepareRow(iteration, mode, speed, time, result));
         }
     }
 }
-
-
-//textView.setText("TestMode: " + testMode + "Progress: " + (int) progressPercent + "%" + ", SpeedMbps: " + deger + ", ProcessedFileSizeMb: " + processedFileSize + ", TotalFileSizeMb: " + totalFileSize + ", ElapsedTimeSec: " + elapsedTimeSec);

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/summary"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:stretchColumns="1">
@@ -10,10 +11,12 @@
             android:textStyle="bold" />
         <TextView
             android:text="Mode"
+            android:padding="15dp"
             android:textStyle="bold" />
 
         <TextView
             android:text="Speed(Mbps)"
+            android:padding="15dp"
             android:textStyle="bold" />
 
         <TextView

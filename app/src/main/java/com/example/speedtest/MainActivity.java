@@ -43,7 +43,8 @@ public class MainActivity extends AppCompatActivity {
     public final String TEST_MODE_UPLOAD = "Upload";
     public final String TEST_MODE_DOWNLOAD = "Download";
     public final String TEST_MODE_UPLOAD_DOWNLOAD = "Upload/Download";
-
+    public final String TEST_RESULT_PASSED = "PASS";
+    public final String TEST_RESULT_FAILED = "FAIL";
 
     final String[] packetSizes = {"1 MB", "5 MB", "10 MB", "50 MB", "100 MB"};
     final String[] testModes = {TEST_MODE_DOWNLOAD, TEST_MODE_UPLOAD, TEST_MODE_UPLOAD_DOWNLOAD};
@@ -75,16 +76,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void TestTriggerButton(View view) {
+        results = new TestResults();
         new SpeedTestTask().execute();
     }
 
     public void TestTriggerButton2(View view){
 
         Intent intent = new Intent(this, TestSummary.class);
+        intent.putExtra("RESULTS", results);
         startActivity(intent);
-
-        TestSummary testSummary = new TestSummary();
-        testSummary.Display(results);
     }
 
 
@@ -264,6 +264,9 @@ public class MainActivity extends AppCompatActivity {
                         TestResult result = new TestResult();
                         result.iterationNumber = finalI;
                         result.elapsedTimeSec = elapsedTimeSec;
+                        result.testMode = testMode;
+                        result.status = TEST_RESULT_PASSED;
+                        result.speed = deger;
                         results.Results.add(result);
                         results.TotalTimeSec += elapsedTimeSec;
 
@@ -287,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
 
                         TestResult result = new TestResult();
                         result.iterationNumber = finalI;
+                        result.status = TEST_RESULT_FAILED;
                         results.Results.add(result);
 
                         testRunning = false;
