@@ -6,26 +6,26 @@
     android:stretchColumns="1">
     <TableRow>
         <TextView
+            android:text="TimeStamp"
+            android:padding="3dp"
+            android:textStyle="bold" />
+        <TextView
             android:text="Iteration"
-            android:padding="15dp"
+            android:padding="3dp"
             android:textStyle="bold" />
         <TextView
             android:text="Mode"
-            android:padding="15dp"
+            android:padding="3dp"
             android:textStyle="bold" />
 
         <TextView
             android:text="Speed(Mbps)"
-            android:padding="15dp"
+            android:padding="3dp"
             android:textStyle="bold" />
 
         <TextView
-            android:text="TimeTaken"
-            android:padding="15dp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:text="Result"
+            android:text="TestTime(s)"
+            android:padding="3dp"
             android:textStyle="bold" />
 
     </TableRow>

@@ -10,7 +10,8 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.google.android.material.tabs.TabLayout;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class TestSummary extends AppCompatActivity {
 
@@ -28,41 +29,55 @@ public class TestSummary extends AppCompatActivity {
         Display(results);
     }
 
-    public TableRow prepareRow(int iteration, String mode, int speed, int timeTaken, String result)
+    public TableRow prepareRow(int iteration, String mode, int speed, int timeTaken, Boolean passed, String timeStamp)
     {
         TableRow resultRow = new TableRow(this);
+        int textColor = passed ? Color.GREEN : Color.RED;
+
+        TextView dateView = new TextView(this);
+        dateView.setText(timeStamp);
+        dateView.setTextColor(textColor);
+        dateView.setGravity(Gravity.CENTER);
+        resultRow.addView(dateView);
 
         TextView iterationView = new TextView(this);
         iterationView.setText(Integer.toString(iteration));
-        iterationView.setTextColor(Color.WHITE);
+        iterationView.setTextColor(textColor);
         iterationView.setGravity(Gravity.CENTER);
         resultRow.addView(iterationView);
 
         TextView modeView = new TextView(this);
         modeView.setText(mode);
-        modeView.setTextColor(Color.WHITE);
+        modeView.setTextColor(textColor);
         modeView.setGravity(Gravity.CENTER);
         resultRow.addView(modeView);
 
         TextView speedView = new TextView(this);
         speedView.setText(Integer.toString(speed));
-        speedView.setTextColor(Color.WHITE);
+        speedView.setTextColor(textColor);
         speedView.setGravity(Gravity.CENTER);
         resultRow.addView(speedView);
 
         TextView timeTakenView = new TextView(this);
         timeTakenView.setText(Integer.toString(timeTaken));
-        timeTakenView.setTextColor(Color.WHITE);
+        timeTakenView.setTextColor(textColor);
         timeTakenView.setGravity(Gravity.CENTER);
         resultRow.addView(timeTakenView);
 
-        TextView resultView = new TextView(this);
-        resultView.setText(result);
-        resultView.setTextColor(Color.WHITE);
-        resultView.setGravity(Gravity.CENTER);
-        resultRow.addView(resultView);
-
         return resultRow;
+    }
+
+    public String getCurrentTimeStamp()
+    {
+        String dateTime;
+        Calendar calendar;
+        SimpleDateFormat simpleDateFormat;
+
+        calendar = Calendar.getInstance();
+        simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+        dateTime = simpleDateFormat.format(calendar.getTime()).toString();
+
+        return dateTime;
     }
 
     public void Display(TestResults results)
@@ -75,10 +90,12 @@ public class TestSummary extends AppCompatActivity {
             String mode = results.Results.get(i).testMode;
             int speed = results.Results.get(i).speed;
             int time = results.Results.get(i).elapsedTimeSec;
-            String result = results.Results.get(i).status;
+            String status = results.Results.get(i).status;
+            Boolean passed = status.equalsIgnoreCase("PASS");
+            String timeStamp = getCurrentTimeStamp();
 
-            System.out.println("Iteration: "  + iteration + " Mode: " + mode + " Speed: " + speed + " elapsedTimeSec: " + time + " Result: " + result);
-            summaryTable.addView(prepareRow(iteration, mode, speed, time, result));
+            System.out.println("TimeStamp: " + timeStamp + " Iteration: "  + iteration + " Mode: " + mode + " Speed: " + speed + " elapsedTimeSec: " + time + " Passed: " + passed);
+            summaryTable.addView(prepareRow(iteration, mode, speed, time, passed, timeStamp));
         }
     }
 }
