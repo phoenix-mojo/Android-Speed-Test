@@ -3,9 +3,11 @@ package com.example.speedtest;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -27,6 +29,16 @@ import fr.bmartel.speedtest.model.SpeedTestMode;
 
 import com.jignesh13.speedometer.SpeedoMeterView;
 
+import com.opencsv.CSVWriter;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     SpeedoMeterView speedoMeterView;
@@ -40,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     TextView intervalTests;
     TestResults results;
 
+    String csvFilePath;
+
     public final String TEST_MODE_UPLOAD = "Upload";
     public final String TEST_MODE_DOWNLOAD = "Download";
     public final String TEST_MODE_UPLOAD_DOWNLOAD = "Upload/Download";
@@ -48,10 +62,33 @@ public class MainActivity extends AppCompatActivity {
 
     final String[] packetSizes = {"1 MB", "5 MB", "10 MB", "50 MB", "100 MB"};
     final String[] testModes = {TEST_MODE_DOWNLOAD, TEST_MODE_UPLOAD, TEST_MODE_UPLOAD_DOWNLOAD};
+    final String[] tableColumns = {"TimeStamp", "Iteration", "Mode", "Speed(Mbps)", "TestTime(s)"};
 
     public void SetSpinnerDropdown(Spinner spinner, String[] items) {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
         spinner.setAdapter(adapter);
+    }
+
+    public String getCurrentTimeStamp(String format)
+    {
+        String dateTime;
+        Calendar calendar;
+        SimpleDateFormat simpleDateFormat;
+
+        calendar = Calendar.getInstance();
+        simpleDateFormat = new SimpleDateFormat(format);
+        dateTime = simpleDateFormat.format(calendar.getTime());
+
+        return dateTime;
+    }
+    public String getCurrentLogTimeStamp()
+    {
+        return getCurrentTimeStamp("MM/dd/yyyy HH:mm:ss");
+    }
+
+    public String getCurrentFileTimeStamp()
+    {
+        return getCurrentTimeStamp("MM_dd_yyyy_HH_mm_ss");
     }
 
     @Override
@@ -77,16 +114,26 @@ public class MainActivity extends AppCompatActivity {
 
     public void TestTriggerButton(View view) {
         results = new TestResults();
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        File directory = cw.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        String csvFileName = getCurrentFileTimeStamp();
+        csvFilePath = String.format("%s/%s.csv", directory, csvFileName);
+
         new SpeedTestTask().execute();
     }
 
     public void TestTriggerButton2(View view){
 
         Intent intent = new Intent(this, TestSummary.class);
+        Bundle tableColumnsBundle = new Bundle();
+
+        tableColumnsBundle.putStringArray("TABLE_COLUMNS", tableColumns);
+
         intent.putExtra("RESULTS", results);
+        intent.putExtras(tableColumnsBundle);
+
         startActivity(intent);
     }
-
 
     public int getFileUploadSizeMb() {
         String packetSizeString = packetSize.getSelectedItem().toString();
@@ -225,6 +272,55 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        String[] getResultRow(TestResult result, int resultSize)
+        {
+            String[] resultRow = new String[resultSize];
+            if (resultSize <= 0)
+            {
+                return resultRow;
+            }
+
+            resultRow = new String[resultSize];
+
+            resultRow[0] = result.timeStamp;
+            resultRow[1] = Integer.toString(result.iterationNumber);
+            resultRow[2] = result.testMode;
+            resultRow[3] = Integer.toString(result.speed);
+            resultRow[4] = Integer.toString(result.elapsedTimeSec);
+
+            return  resultRow;
+        }
+
+        List<String[]> formatResults() {
+            List<String[]> resultList = new ArrayList<String[]>();
+            TestResult result;
+
+            resultList.add(tableColumns);
+
+            for (int i = 0; i < results.Results.size(); i++)
+            {
+                result = results.Results.get(i);
+
+                resultList.add(getResultRow(result, tableColumns.length));
+            }
+
+            return resultList;
+        }
+
+        void writeResultsToCsv() {
+            try {
+                File file = new File(csvFilePath);
+                FileWriter outputFile = new FileWriter(file);
+                CSVWriter csvWriter = new CSVWriter(outputFile);
+                System.out.println("Writing csv to: " + csvFilePath);
+                csvWriter.writeAll(formatResults());
+                csvWriter.close();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         @Override
         protected String doInBackground(Void... params) {
 
@@ -267,6 +363,7 @@ public class MainActivity extends AppCompatActivity {
                         result.testMode = testMode;
                         result.status = TEST_RESULT_PASSED;
                         result.speed = deger;
+                        result.timeStamp = getCurrentLogTimeStamp();
                         results.Results.add(result);
                         results.TotalTimeSec += elapsedTimeSec;
 
@@ -290,6 +387,7 @@ public class MainActivity extends AppCompatActivity {
 
                         TestResult result = new TestResult();
                         result.iterationNumber = finalI;
+                        result.timeStamp = getCurrentLogTimeStamp();
                         result.status = TEST_RESULT_FAILED;
                         results.Results.add(result);
 
@@ -338,6 +436,8 @@ public class MainActivity extends AppCompatActivity {
 
 
             }
+
+            writeResultsToCsv();
 
             return null;
         }

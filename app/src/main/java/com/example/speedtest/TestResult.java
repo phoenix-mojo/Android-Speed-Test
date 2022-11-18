@@ -8,5 +8,6 @@ public class TestResult implements Serializable {
     public int speed;
     public String testMode;
     public String status;
+    public String timeStamp;
 };
 

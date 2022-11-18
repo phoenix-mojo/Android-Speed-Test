@@ -26,7 +26,9 @@ public class TestSummary extends AppCompatActivity {
 
         Intent intent = getIntent();
         TestResults results = (TestResults) intent.getSerializableExtra("RESULTS");
-        Display(results);
+        String[] tableColumns = (String[]) intent.getExtras().getStringArray("TABLE_RESULTS");
+
+        Display(tableColumns, results);
     }
 
     public TableRow prepareRow(int iteration, String mode, int speed, int timeTaken, Boolean passed, String timeStamp)
@@ -67,20 +69,7 @@ public class TestSummary extends AppCompatActivity {
         return resultRow;
     }
 
-    public String getCurrentTimeStamp()
-    {
-        String dateTime;
-        Calendar calendar;
-        SimpleDateFormat simpleDateFormat;
-
-        calendar = Calendar.getInstance();
-        simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-        dateTime = simpleDateFormat.format(calendar.getTime()).toString();
-
-        return dateTime;
-    }
-
-    public void Display(TestResults results)
+    public void Display(String[] tableColumns, TestResults results)
     {
         System.out.println("Size of results: " + results.Results.size() + " TotalTimeSec: " + results.TotalTimeSec);
 
@@ -92,7 +81,7 @@ public class TestSummary extends AppCompatActivity {
             int time = results.Results.get(i).elapsedTimeSec;
             String status = results.Results.get(i).status;
             Boolean passed = status.equalsIgnoreCase("PASS");
-            String timeStamp = getCurrentTimeStamp();
+            String timeStamp = results.Results.get(i).timeStamp;
 
             System.out.println("TimeStamp: " + timeStamp + " Iteration: "  + iteration + " Mode: " + mode + " Speed: " + speed + " elapsedTimeSec: " + time + " Passed: " + passed);
             summaryTable.addView(prepareRow(iteration, mode, speed, time, passed, timeStamp));
